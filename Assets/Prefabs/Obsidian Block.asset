@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75d780319da2cea43b4367b8e8e3c7a8, type: 3}
+  m_Name: Obsidian Block
+  m_EditorClassIdentifier: 
+  stageHealth: 100
+  breakScore: 10
+  scoreMultiplier: 0
+  gold: 0
+  miningMultiplier: 0
+  hasCombo: 0
+  tile: {fileID: 11400000, guid: b57f784ec818fb04bb11823dfac8ebab, type: 2}
+  overlayTile: {fileID: 11400000, guid: edec84ac5e590b24ab2c58bf29a4389c, type: 2}
+  veinChance: 9
+  propogationChance: 90
+  horizontalPropogation: 1
+  layerOrder: 4

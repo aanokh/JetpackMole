@@ -45,15 +45,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b663f660ad56e0b4aa6de84b43d735a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxStageHealth: 40
-  breakScore: 10
-  scoreMultiplier: 0
-  gold: 8
-  miningMultiplier: 0
   nextStageTile: {fileID: 0}
-  hasOverlay: 1
-  borderType: 0
-  blockType: 0
+  blockProperty: {fileID: 11400000, guid: af30ed4a5f15509459340e2bc5833310, type: 2}
 --- !u!50 &248527185624375565
 Rigidbody2D:
   serializedVersion: 4

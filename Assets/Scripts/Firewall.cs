@@ -19,14 +19,17 @@ public class Firewall : MonoBehaviour {
     public void Start() {
         rbody = GetComponent<Rigidbody2D>();
         player = FindObjectOfType<Player>();
+        speedMultiplier = 0;
     }
 
     public void Update() {
-        if (player.transform.position.y < 0) {
-            speedMultiplier = 100 + (int)Mathf.Floor(((int) Mathf.Abs(player.transform.position.y) * 0.5f));
+        if (player.transform.position.y > -3 && speedMultiplier == 0) {
+            speedMultiplier = 0;
         } else {
-            speedMultiplier = 100;
+            speedMultiplier = 100 + (int)Mathf.Floor(((int)Mathf.Abs(Mathf.Min(player.transform.position.y, 0)) * 0.5f));
         }
+
+        Debug.Log(speedMultiplier);
         Vector2 vel = new Vector2(0f, -(speed * (speedMultiplier / 100f)));
         rbody.velocity = vel;
 

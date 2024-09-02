@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75d780319da2cea43b4367b8e8e3c7a8, type: 3}
+  m_Name: Elenite Block
+  m_EditorClassIdentifier: 
+  stageHealth: 35
+  breakScore: 10
+  scoreMultiplier: 0
+  gold: 0
+  miningMultiplier: 1
+  hasCombo: 1
+  tile: {fileID: 11400000, guid: 5732356e0b5bf534997d723a556bb720, type: 2}
+  overlayTile: {fileID: 11400000, guid: 7c09b17a752c9b54cab520d07db9b730, type: 2}
+  veinChance: 10
+  propogationChance: 50
+  horizontalPropogation: 0
+  layerOrder: 2

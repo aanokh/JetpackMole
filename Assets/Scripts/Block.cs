@@ -8,27 +8,16 @@ using UnityEngine.Tilemaps;
 public class Block : MonoBehaviour {
     
     // Config
-    public int maxStageHealth = 100;
-    public int breakScore = 10;
-    public int scoreMultiplier = 0;
-    public int gold = 0;
-    public int miningMultiplier = 0;
     public TileBase nextStageTile;
-    public bool hasOverlay;
-    public BorderType borderType;
-    public BlockType blockType;
+    public BlockProperty blockProperty;
 
     // Cache
     private float health;
     private Player player;
 
     public void Start() {
-        health = maxStageHealth;
+        health = blockProperty.stageHealth;
         player = FindObjectOfType<Player>();
-    }
-
-    public void Update() {
-
     }
 
     public void TakeDamage(float dmg) {
@@ -45,20 +34,17 @@ public class Block : MonoBehaviour {
 
             // death effects
 
-            player.AddCombo(blockType);
-            float comboMult = player.GetComboMult();
 
-            player.AddScore(breakScore);
-            player.AddMining(miningMultiplier);
-            player.AddGold(gold);
-            player.AddMult(scoreMultiplier);
+            player.AddScore(blockProperty.breakScore, blockProperty.comboAffectsScore);
+            player.AddMining(blockProperty.miningMultiplier);
+            player.AddGold(blockProperty.gold);
+            player.AddMult(blockProperty.scoreMultiplier);
+
+            player.AddCombo(blockProperty);
 
             player.audioManager.playSound(player.audioManager.breakSound);
 
-            if (hasOverlay) {
-               TilemapManager.main.UpdateOverlayTile(transform.position, borderType);
-            }
-            TilemapManager.main.ChangeTile(transform.position, null);
+            TilemapManager.main.BreakTile(transform.position);
         }
     }
 }

@@ -70,14 +70,14 @@ public class ShopBlock : MonoBehaviour {
         if (holdDuration >= holdDurationMax) {
             Player player = FindObjectOfType<Player>();
             player.gold -= price;
-            player.AddScore(price * 10);
+            player.AddScore(price * 10, false);
             if (isHealth) {
                 player.maxHp = Mathf.Min(5, player.maxHp + 1);
                 player.hp = Mathf.Min(player.maxHp, player.hp + 1);
                 player.UpdateHearts();
                 FinishShopping();
             } else if (isScore) {
-                player.AddScore(1000);
+                player.AddScore(1000, false);
                 FinishShopping();
             } else if (isMining) {
                 player.miningMultiplier += 50;

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -9,37 +10,11 @@ public class TilemapManager : MonoBehaviour {
 
     // Config
     public static TilemapManager main;
-    public Tilemap goldBorderTilemap;
-    public Tilemap eleniteBorderTilemap;
-    public Tilemap stoneBorderTilemap;
-    public Tilemap obsidianBorderTilemap;
     public TileBase borderTile;
 
     public int startingGeneratedDepth = 10;
     public int depthGenerationBuffer = 5;
     public int levelWidth = 14;
-
-    public TileBase stoneTile;
-
-    public TileBase goldTile;
-    public TileBase goldOverlayTile;
-    public int goldVeinChance = 10;
-    public int goldPropogationChance = 40;
-
-    public TileBase eleniteTile;
-    public TileBase eleniteOverlayTile;
-    public int eleniteVeinChance = 7;
-    public int elenitePropogationChance = 70;
-
-    public TileBase diamondTile;
-    public TileBase diamondOverlayTile;
-    public int diamondVeinChance = 5;
-    public int diamondPropogationChance = 20;
-
-    public TileBase obsidianTile;
-    public TileBase obsidianOverlayTile;
-    public int obsidianVeinChance = 5;
-    public int obsidianPropogationChance = 20;
 
     public TileBase shop1Tile;
     public TileBase shop2Tile;
@@ -53,11 +28,16 @@ public class TilemapManager : MonoBehaviour {
 
     public int genInterval = 100;
 
-    // y (depth), x
-    public List<List<string>> tileArray;
-    
+    public GameObject borderTilemapPrefab;
+    public List<BlockProperty> tileTypes;
+    public BlockProperty stoneBlock;
+
+    // y (depth), x, bool: is spawner
+    private List<List<Tuple<BlockProperty, bool>>> tileArray;
+
 
     // Cache
+    private Dictionary<BlockProperty, Tilemap> borderTilemaps = new Dictionary<BlockProperty, Tilemap>(); // smaller order painted above (ex: 1 above 2)
     private Tilemap tilemap;
     private int lastGeneratedDepth;
     private Player player;
@@ -69,24 +49,23 @@ public class TilemapManager : MonoBehaviour {
     public void Start() {
         tilemap = GetComponent<Tilemap>();
         player = FindObjectOfType<Player>();
-        tileArray = new List<List<string>>();
+
+        // generate border tilemaps (for each block type if they have border/overlay)
+        for (int i = 0; i < tileTypes.Count; i++) {
+            tileTypes[i].layerOrder = i + 1;
+            if (tileTypes[i].overlayTile != null) {
+                borderTilemaps.Add(tileTypes[i], Instantiate(borderTilemapPrefab, transform).GetComponent<Tilemap>());
+                borderTilemaps[tileTypes[i]].GetComponent<TilemapRenderer>().sortingOrder = tileTypes[i].layerOrder * -1;
+            }
+        }
+
+        tileArray = new List<List<Tuple<BlockProperty, bool>>>();
         lastGeneratedDepth = 0;
         GenerateVeins();
-        /*
-        for (int y = 0; y < tileArray.Count; y++) {
-            string s = "";
-            for (int x = 0; x < tileArray[y].Count; x++) {
-                s += tileArray[y][x];
-                s += " ";
-            }
-            Debug.Log(s);
-        }*/
         lastGeneratedDepth = startingGeneratedDepth - 1;
     }
 
     public void Update() {
-        //Debug.Log(Mathf.Abs(((int)player.transform.position.y) - (-lastGeneratedDepth)));
-
         if (Mathf.Abs(((int)player.transform.position.y) - (-lastGeneratedDepth)) < depthGenerationBuffer) {
             while (Mathf.Abs(((int)player.transform.position.y) - (-lastGeneratedDepth)) < depthGenerationBuffer) {
                 GenerateRow();
@@ -109,161 +88,100 @@ public class TilemapManager : MonoBehaviour {
             InitializeTile(x, y);
         }
 
-        // borders
         Vector3Int leftBorderPos = new Vector3Int(-1, y, 0);
-        stoneBorderTilemap.SetTile(leftBorderPos, borderTile);
-        eleniteBorderTilemap.SetTile(leftBorderPos, borderTile);
-        goldBorderTilemap.SetTile(leftBorderPos, borderTile);
-        obsidianBorderTilemap.SetTile(leftBorderPos, borderTile);
-        tilemap.RefreshTile(leftBorderPos);
-        stoneBorderTilemap.RefreshTile(leftBorderPos);
-        eleniteBorderTilemap.RefreshTile(leftBorderPos);
-        goldBorderTilemap.RefreshTile(leftBorderPos);
-        obsidianBorderTilemap.RefreshTile(leftBorderPos);
-
         Vector3Int rightBorderPos = new Vector3Int(levelWidth, y, 0);
-        stoneBorderTilemap.SetTile(rightBorderPos, borderTile);
-        eleniteBorderTilemap.SetTile(rightBorderPos, borderTile);
-        goldBorderTilemap.SetTile(rightBorderPos, borderTile);
-        obsidianBorderTilemap.SetTile(rightBorderPos, borderTile);
-        tilemap.RefreshTile(rightBorderPos);
-        stoneBorderTilemap.RefreshTile(rightBorderPos);
-        eleniteBorderTilemap.RefreshTile(rightBorderPos);
-        goldBorderTilemap.RefreshTile(rightBorderPos);
-        obsidianBorderTilemap.RefreshTile(rightBorderPos);
+
+        // borders
+        foreach (var pair in borderTilemaps) {
+            pair.Value.SetTile(leftBorderPos, borderTile);
+            pair.Value.RefreshTile(leftBorderPos);
+            pair.Value.SetTile(rightBorderPos, borderTile);
+            pair.Value.RefreshTile(rightBorderPos);
+        }
     }
 
     private void InitializeTile(int x, int y) {
         Vector3Int pos = new Vector3Int(x, y, 0);
-        string s = tileArray[-y][x];
-        if (s == "SH1" || s == "SH2" || s == "SH3") {
-            if (s == "SH1") {
-                tilemap.SetTile(pos, shop1Tile);
-            } else if (s == "SH2") {
-                tilemap.SetTile(pos, shop2Tile);
-            } else if (s == "SH3") {
-                tilemap.SetTile(pos, shop3Tile);
-            }
-        } else if (s == "VD" || s == "D") {
-            tilemap.SetTile(pos, diamondTile);
-            stoneBorderTilemap.SetTile(pos, diamondOverlayTile);
-            // gold and elenite overlap
-            goldBorderTilemap.SetTile(pos, borderTile);
-            eleniteBorderTilemap.SetTile(pos, borderTile);
-            tilemap.RefreshTile(pos);
-            stoneBorderTilemap.RefreshTile(pos);
-            goldBorderTilemap.RefreshTile(pos);
-            eleniteBorderTilemap.RefreshTile(pos);
-        } else if (s == "VE" || s == "E") {
-            tilemap.SetTile(pos, eleniteTile);
-            eleniteBorderTilemap.SetTile(pos, eleniteOverlayTile);
-            // gold overlaps
-            goldBorderTilemap.SetTile(pos, borderTile);
-            tilemap.RefreshTile(pos);
-            eleniteBorderTilemap.RefreshTile(pos);
-            goldBorderTilemap.RefreshTile(pos);
-        } else if (s == "VG" || s == "G") {
-            tilemap.SetTile(pos, goldTile);
-            goldBorderTilemap.SetTile(pos, goldOverlayTile);
-            // no overlaps
-            tilemap.RefreshTile(pos);
-            goldBorderTilemap.RefreshTile(pos);
-        } else if (s == "VO" || s == "O") {
-            tilemap.SetTile(pos, obsidianTile);
-            obsidianBorderTilemap.SetTile(pos, obsidianOverlayTile);
-            // gold elenite and diamond overlap
-            goldBorderTilemap.SetTile(pos, borderTile);
-            eleniteBorderTilemap.SetTile(pos, borderTile);
-            stoneBorderTilemap.SetTile(pos, borderTile);
-            tilemap.RefreshTile(pos);
-            obsidianBorderTilemap.RefreshTile(pos);
-            goldBorderTilemap.RefreshTile(pos);
-            eleniteBorderTilemap.RefreshTile(pos);
-            stoneBorderTilemap.RefreshTile(pos);
-        } else if (s == "VA" || s == "A") {
-            // all overlap
-            stoneBorderTilemap.SetTile(pos, borderTile);
-            eleniteBorderTilemap.SetTile(pos, borderTile);
-            goldBorderTilemap.SetTile(pos, borderTile);
-            obsidianBorderTilemap.SetTile(pos, borderTile);
-            stoneBorderTilemap.RefreshTile(pos);
-            eleniteBorderTilemap.RefreshTile(pos);
-            goldBorderTilemap.RefreshTile(pos);
-            obsidianBorderTilemap.RefreshTile(pos);
+
+        BlockProperty block = tileArray[-y][x].Item1;
+        int layerOrder;
+
+        if (block == null) { // air
+            layerOrder = int.MaxValue; // send to bottom
         } else {
-            tilemap.SetTile(pos, stoneTile);
-            // all overlap
-            stoneBorderTilemap.SetTile(pos, borderTile);
-            eleniteBorderTilemap.SetTile(pos, borderTile);
-            goldBorderTilemap.SetTile(pos, borderTile);
-            obsidianBorderTilemap.SetTile(pos, borderTile);
+            tilemap.SetTile(pos, block.tile);
             tilemap.RefreshTile(pos);
-            stoneBorderTilemap.RefreshTile(pos);
-            eleniteBorderTilemap.RefreshTile(pos);
-            goldBorderTilemap.RefreshTile(pos);
-            obsidianBorderTilemap.RefreshTile(pos);
+            layerOrder = block.layerOrder;
+
+            if (borderTilemaps.ContainsKey(block)) {
+                borderTilemaps[block].SetTile(pos, block.overlayTile);
+            }
+        }
+
+        foreach (var pair in borderTilemaps) {
+            // smaller order painted above (ex: 1 above 2)
+            if (pair.Key.layerOrder < layerOrder) {
+                pair.Value.SetTile(pos, borderTile);
+                pair.Value.RefreshTile(pos);
+            }
         }
     }
 
     private void GenerateVeins() {
         // generate air
         for (int y = lastGeneratedDepth; y < (genInterval + lastGeneratedDepth); y++) {
+            
+            // fill with stone
             if (tileArray.Count < y + 1) {
-                tileArray.Add(new List<string>());
+                tileArray.Add(new List<Tuple<BlockProperty, bool>>());
                 for (int x = 0; x < levelWidth; x++) {
-                    tileArray[y].Add("S");
+                    tileArray[y].Add(Tuple.Create(stoneBlock, false));
                 }
             }
 
             // does the row have cave?
-            if (Random.value <= caveChance / 100f) {
-                tileArray[y][Random.Range(0, levelWidth - 1)] = "VA";
+            if (UnityEngine.Random.value <= caveChance / 100f) {
+                tileArray[y][UnityEngine.Random.Range(0, levelWidth - 1)] = Tuple.Create<BlockProperty, bool>(null, true);
             }
         }
 
         // fill out air
         for (int y = lastGeneratedDepth; y < (genInterval + lastGeneratedDepth); y++) {
             for (int x = 0; x < levelWidth; x++) {
-                if (tileArray[y][x] == "VA") {
-                    FillOutVein(x, y, "A", cavePropogationChance / 100f, caveDecay / 100f, 0, true);
+                if (tileArray[y][x].Item2 == true) {
+                    FillOutVein(x, y, null, cavePropogationChance / 100f, caveDecay / 100f, 0, true);
                 }
             }
         }
 
         // generate veins
         for (int y = lastGeneratedDepth; y < (genInterval + lastGeneratedDepth); y++) {
-            // dont generate in air somehow?
 
-            // does the row have a vein?
-            if (Random.value <= diamondVeinChance / 100f) {
-                // diamonds lowest priority
-                tileArray[y][Random.Range(0, levelWidth - 1)] = "VD";
+            // if want to not generate in air, change this
+            List<int> availableSpots = new List<int>();
+            for (int i = 0; i < levelWidth; i++) {
+                availableSpots.Add(i);
             }
-            if (Random.value <= eleniteVeinChance / 100f) {
-                // elenite lower priority
-                tileArray[y][Random.Range(0, levelWidth - 1)] = "VE";
-            }
-            if (Random.value <= goldVeinChance / 100f) {
-                // gold hgiher priority
-                tileArray[y][Random.Range(0, levelWidth - 1)] = "VG";
-            }
-            if (Random.value <= obsidianVeinChance / 100f) {
-                // obsidian highest priority
-                tileArray[y][Random.Range(0, levelWidth - 1)] = "VO";
+
+            // does the row have a vein? create spawners for every tile type (keep track of empty spots to not overlap) (stone has 0 chance)
+            foreach (BlockProperty block in tileTypes) {
+                if (UnityEngine.Random.value <= block.veinChance / 100f) {
+                    if (availableSpots.Count > 0) {
+                        int spotIndex = UnityEngine.Random.Range(0, availableSpots.Count - 1);
+                        int x = availableSpots[spotIndex];
+                        availableSpots.RemoveAt(spotIndex);
+                        tileArray[y][x] = Tuple.Create(block, true);
+                    }
+                }
             }
         }
 
-        // fill out veins
+        // fill out veins (priority goes left to right right now)
         for (int y = lastGeneratedDepth; y < (genInterval + lastGeneratedDepth); y++) {
             for (int x = 0; x < levelWidth; x++) {
-                if (tileArray[y][x] == "VD") {
-                    FillOutVein(x, y, "D", diamondPropogationChance / 100f, oreDecay / 100f, 0, false);
-                } else if (tileArray[y][x] == "VE") {
-                    FillOutVein(x, y, "E", elenitePropogationChance / 100f, oreDecay / 100f, 0, false);
-                } else if (tileArray[y][x] == "VG") {
-                    FillOutVein(x, y, "G", goldPropogationChance / 100f, oreDecay / 100f, 0, false);
-                } else if (tileArray[y][x] == "VO") {
-                    FillOutVein(x, y, "O", obsidianPropogationChance / 100f, oreDecay / 100f, 0, true);
+                if (tileArray[y][x].Item2 == true) {
+                    BlockProperty block = tileArray[y][x].Item1;
+                    FillOutVein(x, y, block, block.propogationChance / 100f, oreDecay / 100f, 0, block.horizontalPropogation);
                 }
             }
         }
@@ -271,21 +189,24 @@ public class TilemapManager : MonoBehaviour {
         // generate shop
         for (int y = lastGeneratedDepth + (genInterval - 5); y < (genInterval + lastGeneratedDepth); y++) {
             for (int x = 0; x < levelWidth; x++) {
-                tileArray[y][x] = "A";
+                tileArray[y][x] = Tuple.Create<BlockProperty, bool>(null, false);
             }
         }
 
-        tileArray[lastGeneratedDepth + (genInterval - 2)][2] = "SH1";
-        tileArray[lastGeneratedDepth + (genInterval - 2)][5] = "SH2";
-        tileArray[lastGeneratedDepth + (genInterval - 2)][8] = "SH3";
+        //tileArray[lastGeneratedDepth + (genInterval - 2)][2] = "SH1";
+        //tileArray[lastGeneratedDepth + (genInterval - 2)][5] = "SH2";
+        //tileArray[lastGeneratedDepth + (genInterval - 2)][8] = "SH3";
 
         for (int x = 0; x < levelWidth; x++) {
-            tileArray[lastGeneratedDepth + (genInterval - 1)][x] = "S";
+            tileArray[lastGeneratedDepth + (genInterval - 1)][x] = Tuple.Create(stoneBlock, false);
         }
     }
 
-    private void FillOutVein(int x, int y, string s, float p, float d, int i, bool horizontal) {
-        float dp = d * p;
+    private void FillOutVein(int x, int y, BlockProperty block, float propogation, float decay, int iteration, bool horizontal) {
+        if (propogation <= 0) {
+            return;
+        }
+        float propChance = propogation * decay;
         int sidesGenerated = 0;
         float verticalCoefficient = 1f;
         if (horizontal) {
@@ -293,40 +214,40 @@ public class TilemapManager : MonoBehaviour {
         }
         // above
         if (y - 1 >= 0) {
-            if (Random.value <= (p * verticalCoefficient)) {
-                tileArray[y - 1][x] = s;
-                FillOutVein(x, y - 1, s, dp, d, i+1, horizontal);
+            if (UnityEngine.Random.value <= (propogation * verticalCoefficient)) {
+                tileArray[y - 1][x] = Tuple.Create(block, false);
+                FillOutVein(x, y - 1, block, propChance, decay, iteration + 1, horizontal);
                 sidesGenerated++;
             }
         }
         // below
         if (y + 1 < tileArray.Count) {
-            if (Random.value <= (p * verticalCoefficient)) {
-                tileArray[y + 1][x] = s;
-                FillOutVein(x, y + 1, s, dp, d, i+1, horizontal);
+            if (UnityEngine.Random.value <= (propogation * verticalCoefficient)) {
+                tileArray[y + 1][x] = Tuple.Create(block, false);
+                FillOutVein(x, y + 1, block, propChance, decay, iteration + 1, horizontal);
                 sidesGenerated++;
             }
         }
         // left
         if (x - 1 >= 0) {
-            if (Random.value <= p) {
-                tileArray[y][x - 1] = s;
-                FillOutVein(x - 1, y, s, dp, d, i+1, horizontal);
+            if (UnityEngine.Random.value <= propogation) {
+                tileArray[y][x - 1] = Tuple.Create(block, false);
+                FillOutVein(x - 1, y, block, propChance, decay, iteration + 1, horizontal);
                 sidesGenerated++;
             }
         }
         // right
         if (x + 1 < levelWidth) {
-            if (Random.value <= p) {
-                tileArray[y][x + 1] = s;
-                FillOutVein(x + 1, y, s, dp, d, i+1, horizontal);
+            if (UnityEngine.Random.value <= propogation) {
+                tileArray[y][x + 1] = Tuple.Create(block, false);
+                FillOutVein(x + 1, y, block, propChance, decay, iteration + 1, horizontal);
                 sidesGenerated++;
             }
         }
 
-        if (i == 0 && sidesGenerated < 2) {
+        if (iteration == 0 && sidesGenerated < 2) {
             // prevent single vein on first iteration
-            FillOutVein(x, y, s, p, d, 0, horizontal);
+            FillOutVein(x, y, block, propogation, decay, 0, horizontal);
         }
     }
 
@@ -335,41 +256,17 @@ public class TilemapManager : MonoBehaviour {
         tilemap.RefreshTile(tilemap.WorldToCell(pos));
     }
 
-    public void UpdateOverlayTile(Vector3 pos, BorderType type) {
+    // for mining
+    public void BreakTile(Vector3 pos) {
 
         Vector3Int posInt = tilemap.WorldToCell(pos);
 
-        if (type == BorderType.ObsidianBorder) {
-            // no overlaps
-            obsidianBorderTilemap.SetTile(posInt, borderTile);
-            obsidianBorderTilemap.RefreshTile(posInt);
-        } else if (type == BorderType.StoneBorder) {
-            // gold overlaps
-            obsidianBorderTilemap.SetTile(posInt, borderTile);
-            stoneBorderTilemap.SetTile(posInt, borderTile);
-
-            obsidianBorderTilemap.RefreshTile(posInt);
-            stoneBorderTilemap.RefreshTile(posInt);
-        } else if (type == BorderType.EleniteBorder) {
-            // gold and elenite overlap
-            obsidianBorderTilemap.SetTile(posInt, borderTile);
-            stoneBorderTilemap.SetTile(posInt, borderTile);
-            eleniteBorderTilemap.SetTile(posInt, borderTile);
-
-            obsidianBorderTilemap.RefreshTile(posInt);
-            stoneBorderTilemap.RefreshTile(posInt);
-            eleniteBorderTilemap.RefreshTile(posInt);
-        } else if (type == BorderType.GoldBorder) {
-            // gold elenite and diamond overlap
-            obsidianBorderTilemap.SetTile(posInt, borderTile);
-            stoneBorderTilemap.SetTile(posInt, borderTile);
-            eleniteBorderTilemap.SetTile(posInt, borderTile);
-            goldBorderTilemap.SetTile(posInt, borderTile);
-
-            obsidianBorderTilemap.RefreshTile(posInt);
-            stoneBorderTilemap.RefreshTile(posInt);
-            eleniteBorderTilemap.RefreshTile(posInt);
-            goldBorderTilemap.RefreshTile(posInt);
+        foreach (var pair in borderTilemaps) {
+            pair.Value.SetTile(posInt, borderTile);
+            pair.Value.RefreshTile(posInt);
         }
+
+        tilemap.SetTile(tilemap.WorldToCell(posInt), null);
+        tilemap.RefreshTile(tilemap.WorldToCell(posInt));
     }
 }

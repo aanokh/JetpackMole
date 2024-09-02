@@ -24,6 +24,7 @@ public class Player : MonoBehaviour {
     public BoxCollider2D feet;
     public ParticleSystem jetpackEffect;
     public int maxHp = 3;
+    public int maxPower = 3;
 
     // seconds
     public float animationBufferMax = 0.1f;
@@ -41,7 +42,8 @@ public class Player : MonoBehaviour {
     public int score = 0;
     public int hp = 3;
     public int combo = 0;
-    public BlockType comboBlock;
+    public int power = 0;
+    public BlockProperty comboBlock;
     public List<float> comboMultiplier;
 
     public AudioManager audioManager;
@@ -66,14 +68,7 @@ public class Player : MonoBehaviour {
 
         audioManager = FindObjectOfType<AudioManager>();
 
-        comboMultiplier = new List<float>();
-        comboMultiplier.Add(1);    // 0
-        comboMultiplier.Add(1); // 1
-        comboMultiplier.Add(2);    // 2
-        comboMultiplier.Add(3); // 3
-        comboMultiplier.Add(4);    // 4
-        comboMultiplier.Add(5); // 5
-        comboMultiplier.Add(6);    // 6
+        comboMultiplier = new List<float> {1, 1, 2, 3, 4, 5, 6};
 
         hp = maxHp;
         rbody = GetComponent<Rigidbody2D>();
@@ -326,8 +321,8 @@ public class Player : MonoBehaviour {
         }
     }
 
-    public void AddCombo(BlockType block) {
-        if (block == comboBlock && block != BlockType.Obsidian && block != BlockType.Stone) {
+    public void AddCombo(BlockProperty block) {
+        if (block == comboBlock && block.hasCombo) {
             combo++;
             if (combo > 0) {
                 audioManager.playNote(combo - 1);
@@ -343,8 +338,12 @@ public class Player : MonoBehaviour {
         return comboMultiplier[Mathf.Min(combo, comboMultiplier.Count - 1)];
     }
 
-    public void AddScore(int val) {
-        score += (int) Mathf.Floor(val * (scoreMultiplier / 100f));
+    public void AddScore(int val, bool comboAffectsScore) {
+        if (comboAffectsScore) {
+            score += (int)Mathf.Floor(val * (scoreMultiplier / 100f) * GetComboMult());
+        } else {
+            score += (int)Mathf.Floor(val * (scoreMultiplier / 100f));
+        }
     }
 
     public void AddMining(int val) {
@@ -357,6 +356,10 @@ public class Player : MonoBehaviour {
 
     public void AddMult(int val) {
         scoreMultiplier += (int)Mathf.Floor(val * GetComboMult());
+    }
+
+    public void AddPower(int power) {
+        this.power += power;
     }
 
     public void UpdateHearts() {
