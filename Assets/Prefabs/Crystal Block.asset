@@ -22,6 +22,8 @@ MonoBehaviour:
   hasCombo: 0
   tile: {fileID: 11400000, guid: e589929309f954540a612d4f65f2c40a, type: 2}
   overlayTile: {fileID: 0}
+  primaryParticleColor: {r: 0.91764706, g: 0.30980393, b: 0.21176471, a: 1}
+  secondaryParticleColor: {r: 0.9607843, g: 0.49019608, b: 0.2901961, a: 1}
   veinChance: 3
   propogationChance: 0
   horizontalPropogation: 0

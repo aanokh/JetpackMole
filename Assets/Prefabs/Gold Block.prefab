@@ -47,6 +47,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   nextStageTile: {fileID: 11400000, guid: 71bee01a6f8e1e14fa1b792e3d09193c, type: 2}
   blockProperty: {fileID: 11400000, guid: af30ed4a5f15509459340e2bc5833310, type: 2}
+  primaryBreakEffectPrefab: {fileID: 827594165244372837, guid: 8d0339eb58fcb4c408b65627374c83b6,
+    type: 3}
+  secondaryBreakEffectPrefab: {fileID: 1485894150300476116, guid: b4eba548ebaa99446b72c1136c41c2a3,
+    type: 3}
 --- !u!50 &248527185624375565
 Rigidbody2D:
   serializedVersion: 4

@@ -10,12 +10,15 @@ public class Block : MonoBehaviour {
     // Config
     public TileBase nextStageTile;
     public BlockProperty blockProperty;
+    public GameObject primaryBreakEffectPrefab;
+    public GameObject secondaryBreakEffectPrefab;
 
     // Cache
     private float health;
     private Player player;
 
     public void Start() {
+
         health = blockProperty.stageHealth;
         player = FindObjectOfType<Player>();
     }
@@ -33,7 +36,19 @@ public class Block : MonoBehaviour {
         } else {
 
             // death effects
+            ParticleSystem primaryBreakEffect = Instantiate(primaryBreakEffectPrefab, transform.position, Quaternion.identity).GetComponent<ParticleSystem>();
+            ParticleSystem secondaryBreakEffect = Instantiate(secondaryBreakEffectPrefab, transform.position, Quaternion.identity).GetComponent<ParticleSystem>();
 
+            ParticleSystem.MainModule primaryMain = primaryBreakEffect.main;
+            primaryMain.startColor = blockProperty.primaryParticleColor;
+            ParticleSystem.MainModule secondaryMain = secondaryBreakEffect.main;
+            secondaryMain.startColor = blockProperty.secondaryParticleColor;
+
+            primaryBreakEffect.Play();
+            secondaryBreakEffect.Play();
+
+            Destroy(primaryBreakEffect.gameObject, 10);
+            Destroy(secondaryBreakEffect.gameObject, 10);
 
             player.AddScore(blockProperty.breakScore, blockProperty.comboAffectsScore);
             player.AddMining(blockProperty.miningMultiplier);
@@ -45,6 +60,8 @@ public class Block : MonoBehaviour {
             player.audioManager.playSound(player.audioManager.breakSound);
 
             TilemapManager.main.BreakTile(transform.position);
+
+            //object deletes itself when tile is removed in tilemap manager
         }
     }
 }

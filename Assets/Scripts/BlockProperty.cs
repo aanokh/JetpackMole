@@ -21,6 +21,8 @@ public class BlockProperty : ScriptableObject {
     [Header("Sprite Settings")]
     public TileBase tile;
     public TileBase overlayTile; // if null, no border
+    public Color primaryParticleColor;
+    public Color secondaryParticleColor;
 
     [Header("Generation Settings")]
     public int veinChance = 10;

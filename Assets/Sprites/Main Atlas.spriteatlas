@@ -60,6 +60,7 @@ SpriteAtlas:
   - {fileID: 6845770812298972017, guid: 022573ae144e13346be02d4881e83204, type: 3}
   - {fileID: -3050751888533912483, guid: 022573ae144e13346be02d4881e83204, type: 3}
   - {fileID: 8800035974265866909, guid: 022573ae144e13346be02d4881e83204, type: 3}
+  - {fileID: -267299062365790822, guid: 022573ae144e13346be02d4881e83204, type: 3}
   - {fileID: 2817233736066390136, guid: 022573ae144e13346be02d4881e83204, type: 3}
   - {fileID: 5071658265096919417, guid: 022573ae144e13346be02d4881e83204, type: 3}
   - {fileID: 3663142272643770474, guid: 022573ae144e13346be02d4881e83204, type: 3}
@@ -175,6 +176,7 @@ SpriteAtlas:
   - spritespng_107
   - spritespng_108
   - spritespng_109
+  - spritespng_114
   - spritespng_10
   - spritespng_11
   - spritespng_12

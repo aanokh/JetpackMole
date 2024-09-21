@@ -25,6 +25,9 @@ public class Player : MonoBehaviour {
     public ParticleSystem jetpackEffect;
     public int maxHp = 3;
     public int maxPower = 3;
+    public Joystick joystick;
+    public float verticalDeadzone = 0.5f;
+    public float horizontalDeadzone = 0.3f;
 
     // seconds
     public float animationBufferMax = 0.1f;
@@ -37,6 +40,7 @@ public class Player : MonoBehaviour {
     private SpriteRenderer spriteRenderer;
     private Animator animator;
     private InterfaceController interfaceController;
+    private bool onMobile;
 
     public int gold = 0;
     public int score = 0;
@@ -56,6 +60,7 @@ public class Player : MonoBehaviour {
     private float sliderDissapearTimer;
     private float iframes;
     private float blinkCounter;
+    private bool wasPressingUp = false;
     private bool blinkToggle;
 
     private bool dead = false;
@@ -65,6 +70,12 @@ public class Player : MonoBehaviour {
     private float idling = 0;
 
     public void Start() {
+        if (Application.platform == RuntimePlatform.Android || Application.platform == RuntimePlatform.IPhonePlayer) {
+            onMobile = true;
+        } else {
+            onMobile = false;
+        }
+        onMobile = true;
 
         audioManager = FindObjectOfType<AudioManager>();
 
@@ -87,6 +98,30 @@ public class Player : MonoBehaviour {
         iframes = 0;
         blinkCounter = 0;
         blinkToggle = true;
+    }
+    private float GetHorizontalInput() {
+        if (onMobile) {
+            Debug.Log(joystick.Horizontal);
+            if (Mathf.Abs(joystick.Horizontal) < horizontalDeadzone) {
+                return 0;
+            } else {
+                return joystick.Horizontal;
+            }
+        } else {
+            return Input.GetAxisRaw("Horizontal");
+        }
+    }
+    private float GetVerticalInput() {
+        if (onMobile) {
+            Debug.Log(joystick.Vertical);
+            if (Mathf.Abs(joystick.Vertical) < verticalDeadzone) {
+                return 0;
+            } else {
+                return joystick.Vertical;
+            }
+        } else {
+            return Input.GetAxisRaw("Vertical");
+        }
     }
 
     public void Update() {
@@ -118,20 +153,20 @@ public class Player : MonoBehaviour {
     }
 
     private void Mine() {
-        float controlThrow = Input.GetAxisRaw("Horizontal"); // value is between -1 to +1
+        float controlThrow = GetHorizontalInput();
 
         Vector3 facingDirection = transform.right;
         if (controlThrow < 0) {
             facingDirection = -facingDirection;
         }
 
-        if (Input.GetButton("Dig")) {
+        if (GetVerticalInput() < 0) {
             facingDirection = -transform.up;
-        } else if (Input.GetButton("Jump")) {
+        } else if (GetVerticalInput() > 0) {
             facingDirection = transform.up;
         }
 
-        if (controlThrow != 0 || Input.GetButton("Dig") || Input.GetButton("Jump")) {
+        if (controlThrow != 0 || (GetVerticalInput() != 0)) {
             Debug.DrawRay(transform.position, facingDirection, Color.red);
             RaycastHit2D hit = Physics2D.Raycast(transform.position, facingDirection, 1f, LayerMask.GetMask("Blocks", "Shop"));
 
@@ -182,7 +217,7 @@ public class Player : MonoBehaviour {
     }
 
     private void Run() {
-        float controlThrow = Input.GetAxisRaw("Horizontal"); // value is between -1 to +1
+        float controlThrow = GetHorizontalInput();
 
         if (controlThrow < 0) {
             spriteRenderer.flipX = true;
@@ -215,14 +250,16 @@ public class Player : MonoBehaviour {
             }
         }
 
-        if (Input.GetButtonDown("Jump")) {
+        float controlThrow = GetVerticalInput();
+
+        if (wasPressingUp == false && controlThrow > 0) {
             if (jetpackCooldown <= 0) {
                 jetpackEffect.Play();
                 if (!dead) {
                     audioManager.startFlySound();
                 }
             }
-        } else if (Input.GetButtonUp("Jump")) {
+        } else if (wasPressingUp == true && controlThrow <= 0) {
             jetpackEffect.Stop();
             audioManager.stopFlySound();
         }
@@ -238,7 +275,7 @@ public class Player : MonoBehaviour {
             }
         }
 
-        if (Input.GetButton("Jump")) {
+        if (controlThrow > 0) {
             if (jetpackCooldown <= 0) {
                 if (jetpackDuration > 0) {
                     Vector2 jumpVelocityToAdd = new Vector2(0f, jetpackSpeedAdd * Time.deltaTime);
@@ -274,6 +311,12 @@ public class Player : MonoBehaviour {
                     jetpackSlider.value = jetpackDuration;
                 }
             }
+        }
+
+        if (controlThrow > 0) {
+            wasPressingUp = true;
+        } else {
+            wasPressingUp = false;
         }
     }
 

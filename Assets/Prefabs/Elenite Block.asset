@@ -17,9 +17,13 @@ MonoBehaviour:
   scoreMultiplier: 0
   gold: 0
   miningMultiplier: 1
+  powerFill: 0
+  comboAffectsScore: 0
   hasCombo: 1
   tile: {fileID: 11400000, guid: 5732356e0b5bf534997d723a556bb720, type: 2}
   overlayTile: {fileID: 11400000, guid: 7c09b17a752c9b54cab520d07db9b730, type: 2}
+  primaryParticleColor: {r: 0.9411765, g: 0.30980393, b: 0.47058824, a: 1}
+  secondaryParticleColor: {r: 0.9647059, g: 0.5058824, b: 0.5058824, a: 1}
   veinChance: 10
   propogationChance: 50
   horizontalPropogation: 0
