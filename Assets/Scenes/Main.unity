@@ -11039,7 +11039,7 @@ MonoBehaviour:
   maxPower: 3
   joystick: {fileID: 261022706}
   verticalDeadzone: 0.5
-  horizontalDeadzone: 0.3
+  horizontalDeadzone: 0.5
   animationBufferMax: 0.1
   miningSpeed: 50
   gold: 0

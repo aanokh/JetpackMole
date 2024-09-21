@@ -339,9 +339,10 @@ public class Player : MonoBehaviour {
     }
 
     public void Die() {
+        joystick.gameObject.SetActive(false);
         dead = true;
         audioManager.stopFlySound();
-        audioManager.playSound(audioManager.loseSound);
+        //audioManager.playSound(audioManager.loseSound);
         Color c;
         foreach (Image i in jetpackSlider.GetComponentsInChildren<Image>()) {
             c = i.color;
